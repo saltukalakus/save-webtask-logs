@@ -12,9 +12,11 @@ function transferLog() {
     console.log(url);
     //chrome.runtime.sendMessage(url);
 
-    chrome.runtime.sendMessage({greeting: "hello", collection: [url]}, function(response) {
+    if(typeof chrome.app.isInstalled!=='undefined'){
+      chrome.runtime.sendMessage({greeting: "hello", collection: [url]}, function(response) {
         console.log(response.farewell);
       });
+   }
 }
 
 var intervalID = setInterval(transferLog, 5000);
