@@ -1,0 +1,30 @@
+{
+  "manifest_version": 2,
+
+  "name": "Export Auth0 Webtask Logs",
+  "description": "Export Auth0 Webtask Logs",
+  "version": "0.0.1",
+
+  "page_action": {
+    "default_icon": {
+      "32": "icon32.png"
+    }
+  },
+  "background": {
+    "scripts": [ "background.js" ],
+    "persistent": false 
+  },
+  "content_scripts": [
+    {
+    "matches": ["https://*.webtask.io/*"],
+    "js": ["thirdParty/jquery-3.5.1.min.js", "content.js"],
+    "run_at": "document_idle"
+    }
+  ],
+  "permissions": [
+    "tabs",
+    "activeTab",
+    "background",
+    "downloads"
+  ]
+}
