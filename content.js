@@ -1,3 +1,41 @@
+const DELAY_EXPORT_IN_MSEC = 1000*60*1; // Delay before saving the next logs
+const DELAY_EXPORT_IN_MSEC_QUICK = 100  // In case of error or object not initialized 
+var exportLogs = true; // State of log export
+var doOnce = false; // One time initializaitons
+var exportButton = null; //
+
+function doOnceFn() {
+  // App not loaded yet
+  if (document.getElementsByClassName("content-header")[1] === "undefined") {
+    return;
+  }
+
+  if (doOnce) return;
+
+  // DOM magic to add the "Export log button"
+  var contentHeader = document.getElementsByClassName("content-header")[1];
+  exportButton = document.createElement("button");
+  exportButton.className = "btn btn-default pull-right";
+  exportButton.id = "exportLogButton";
+  var text = document.createTextNode("STOP LOG EXPORT");
+  exportButton.appendChild(text);
+  contentHeader.appendChild(exportButton);
+
+  // Button logic to start/stop saving logs
+  exportButton.onclick = function (e) {
+    exportLogs = !exportLogs;
+    if (exportLogs) {
+      document.getElementById("exportLogButton").innerHTML = "STOP LOG EXPORT";
+    } else {
+      document.getElementById("exportLogButton").innerHTML = "START LOG EXPORT";
+      // quickly send the available logs
+      setTimeout(transferLog, DELAY_EXPORT_IN_MSEC_QUICK); 
+    }
+  }
+
+  doOnce = true;
+}
+
 // Convert HTLM logs to CVS logs
 function parse(htmlLogs) {
   var cvsLogs = htmlLogs;
@@ -6,24 +44,36 @@ function parse(htmlLogs) {
 
 // Grab the logs from scree and send to background job
 function transferLog() {
-    
+  // Schedule a repeat
+  setTimeout(transferLog, DELAY_EXPORT_IN_MSEC);
+
+  // If export logs is disabled skip rest of the actions
+  if (!exportLogs) return;
+
+  // Initialization of GUI and other stuff which needs to run once
+  doOnceFn();
+
+  // If the application isn't installed yet, wait for it to get ready
+  if(typeof chrome.app.isInstalled === 'undefined'  || 
+     document.getElementsByClassName("wt-logs-list-container")[0] === 'undefined' ||
+     document.getElementsByClassName("wt-icon-261")[0] ===  'undefined' ){
+      setTimeout(transferLog, DELAY_EXPORT_IN_MSEC_QUICK); 
+      return;
+  }
+
   // Read the logs from HTML
   var logs = document.getElementsByClassName("wt-logs-list-container")[0].innerHTML.toString();
-    
-  // Clear the logs with clicking the button
+
+  // Clear the logs by clicking the extension's clear button
   document.getElementsByClassName("wt-icon-261")[0].click();
 
   // Keep the logs in the Blob
   var blob = new Blob( [parse(logs)], {type: "text/plain"});
-  console.log(blob.text);
   var url = URL.createObjectURL(blob);
 
   // Send the blob to background job
-  if(typeof chrome.app.isInstalled!=='undefined'){
-    chrome.runtime.sendMessage({greeting: "hello", collection: [url]}, function(response) {
-    console.log(response.farewell);
-    });
-  }
-}
+  chrome.runtime.sendMessage({greeting: "hello", collection: [url]}, function(response) {});
+};
 
-var intervalID = setInterval(transferLog, 5000);
+// Start the event loop to send logs to file
+transferLog();
