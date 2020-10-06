@@ -1,8 +1,14 @@
-const DELAY_EXPORT_IN_MSEC = 1000*5*1; // Delay before saving the next logs
+const DELAY_EXPORT_IN_MSEC = 1000*60*1; // Delay before saving the next logs
 const DELAY_EXPORT_IN_MSEC_QUICK = 100  // In case of an error or app not initialized 
 var exportLogs = true; // State of log export
-var doOnce = false; // One time initializaitons
+var doOnce = false; // One time initializations
 var exportButton = null; //Export logs button
+var eventLoopTimer = null; //Event loop timer
+
+function setEventLoopTimer(value){
+  eventLoopTimer ? clearTimeout(eventLoopTimer) : null;
+  eventLoopTimer = setTimeout(transferLog, value);
+}
 
 function doOnceFn() {
   // App not loaded yet
@@ -27,7 +33,7 @@ function doOnceFn() {
     if (exportLogs) {
       document.getElementById("exportLogButton").innerHTML = "STOP LOG EXPORT";
       // quickly send the available logs
-      setTimeout(transferLog, DELAY_EXPORT_IN_MSEC_QUICK); 
+      setEventLoopTimer(DELAY_EXPORT_IN_MSEC_QUICK); 
     } else {
       document.getElementById("exportLogButton").innerHTML = "START LOG EXPORT";
     }
@@ -44,8 +50,9 @@ function parse(htmlLogs) {
 
 // Grab the logs from screen and send to background job
 function transferLog() {
+
   // Schedule a repeat
-  setTimeout(transferLog, DELAY_EXPORT_IN_MSEC);
+  setEventLoopTimer(DELAY_EXPORT_IN_MSEC);
 
   // If export logs is disabled skip rest of the actions
   if (!exportLogs) return;
@@ -57,7 +64,7 @@ function transferLog() {
   if(typeof chrome.app.isInstalled === undefined  || 
      document.getElementsByClassName("wt-logs-list-container")[0] === undefined ||
      document.getElementsByClassName("wt-icon-261")[0] ===  undefined ){
-      setTimeout(transferLog, DELAY_EXPORT_IN_MSEC_QUICK); 
+      setEventLoopTimer(DELAY_EXPORT_IN_MSEC_QUICK); 
       return;
   }
 
@@ -72,9 +79,10 @@ function transferLog() {
   var url = URL.createObjectURL(blob);
 
   // Send the blob to background job
-  if (blob.size > 0)
-    chrome.runtime.sendMessage({greeting: "hello", collection: [url]}, function(response) {});
+  console.log("Send blob: " + url + " blob_size: " + blob.size);
+  chrome.runtime.sendMessage({"blob": url, "blob_size": blob.size});
 };
 
 // Start the event loop to send logs to file
 transferLog();
+
