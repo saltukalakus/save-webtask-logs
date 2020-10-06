@@ -1,8 +1,8 @@
-const DELAY_EXPORT_IN_MSEC = 1000*60*1; // Delay before saving the next logs
-const DELAY_EXPORT_IN_MSEC_QUICK = 100  // In case of error or object not initialized 
+const DELAY_EXPORT_IN_MSEC = 1000*5*1; // Delay before saving the next logs
+const DELAY_EXPORT_IN_MSEC_QUICK = 100  // In case of an error or app not initialized 
 var exportLogs = true; // State of log export
 var doOnce = false; // One time initializaitons
-var exportButton = null; //
+var exportButton = null; //Export logs button
 
 function doOnceFn() {
   // App not loaded yet
@@ -26,10 +26,10 @@ function doOnceFn() {
     exportLogs = !exportLogs;
     if (exportLogs) {
       document.getElementById("exportLogButton").innerHTML = "STOP LOG EXPORT";
-    } else {
-      document.getElementById("exportLogButton").innerHTML = "START LOG EXPORT";
       // quickly send the available logs
       setTimeout(transferLog, DELAY_EXPORT_IN_MSEC_QUICK); 
+    } else {
+      document.getElementById("exportLogButton").innerHTML = "START LOG EXPORT";
     }
   }
 
@@ -42,7 +42,7 @@ function parse(htmlLogs) {
   return cvsLogs;
 }
 
-// Grab the logs from scree and send to background job
+// Grab the logs from screen and send to background job
 function transferLog() {
   // Schedule a repeat
   setTimeout(transferLog, DELAY_EXPORT_IN_MSEC);
@@ -54,9 +54,9 @@ function transferLog() {
   doOnceFn();
 
   // If the application isn't installed yet, wait for it to get ready
-  if(typeof chrome.app.isInstalled === 'undefined'  || 
-     document.getElementsByClassName("wt-logs-list-container")[0] === 'undefined' ||
-     document.getElementsByClassName("wt-icon-261")[0] ===  'undefined' ){
+  if(typeof chrome.app.isInstalled === undefined  || 
+     document.getElementsByClassName("wt-logs-list-container")[0] === undefined ||
+     document.getElementsByClassName("wt-icon-261")[0] ===  undefined ){
       setTimeout(transferLog, DELAY_EXPORT_IN_MSEC_QUICK); 
       return;
   }
@@ -72,7 +72,8 @@ function transferLog() {
   var url = URL.createObjectURL(blob);
 
   // Send the blob to background job
-  chrome.runtime.sendMessage({greeting: "hello", collection: [url]}, function(response) {});
+  if (blob.size > 0)
+    chrome.runtime.sendMessage({greeting: "hello", collection: [url]}, function(response) {});
 };
 
 // Start the event loop to send logs to file

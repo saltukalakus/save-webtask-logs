@@ -3,7 +3,7 @@
 
   "name": "export-webtask-logs",
   "description": "Export Auth0 Webtask Logs",
-  "version": "0.0.1",
+  "version": "1.0.0",
 
   "page_action": {
     "permissions": [
