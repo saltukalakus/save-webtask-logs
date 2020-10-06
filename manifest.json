@@ -2,7 +2,7 @@
   "manifest_version": 2,
 
   "name": "export-webtask-logs",
-  "description": "Export Auth0 Webtask Logs",
+  "description": "Export Auth0 Webtask Logs To Local Disk",
   "version": "1.0.0",
 
   "page_action": {

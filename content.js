@@ -42,10 +42,19 @@ function doOnceFn() {
   doOnce = true;
 }
 
-// Convert HTLM logs to CVS logs
+// Convert HTLM logs to txt logs
 function parse(htmlLogs) {
-  var cvsLogs = htmlLogs;
-  return cvsLogs;
+  var txtLogs = htmlLogs.replace(/<div class="wt-logs-item ">/g,'\r\n\r\n')
+                        .replace(/<div class="wt-logs-item-time">/g,'')
+                        .replace(/<div class="wt-logs-item wt-logs-connected">/g, '')
+                        .replace(/<!-- [/]react-text -->/g, '')
+                        .replace(/<div class="wt-logs-item-description">/g, '')
+                        .replace(/<!-- react-text:(.*?)-->/g, '')
+                        .replace(/<[/]div>/g, '')
+                        .replace(/<span>/g, '')
+                        .replace(/<[/]span>/g, '')
+                        .replace(/&nbsp;/g, '');
+  return txtLogs;
 }
 
 // Grab the logs from screen and send to background job
@@ -70,12 +79,13 @@ function transferLog() {
 
   // Read the logs from HTML
   var logs = document.getElementsByClassName("wt-logs-list-container")[0].innerHTML.toString();
+  var parsedLogs = parse(logs);
 
   // Clear the logs by clicking the extension's clear button
   document.getElementsByClassName("wt-icon-261")[0].click();
 
   // Keep the logs in the Blob
-  var blob = new Blob( [parse(logs)], {type: "text/plain"});
+  var blob = new Blob( [parsedLogs], {type: "text/plain"});
   var url = URL.createObjectURL(blob);
 
   // Send the blob to background job
