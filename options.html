@@ -1,21 +1,30 @@
 <!DOCTYPE html>
+
 <html>
-<head><title>My Test Extension Options</title></head>
+<head><title>Export Realtime Logs Extension Options</title></head>
 <body>
 
-Favorite color:
-<select id="color">
- <option value="red">red</option>
- <option value="green">green</option>
- <option value="blue">blue</option>
- <option value="yellow">yellow</option>
-</select>
+<div> Export logs every:
+  <select id="export-time">
+    <option value="15">15 Seconds</option>
+    <option value="30">30 Seconds</option>
+    <option value="60">1 Minute</option>
+    <option value="180">3 Minutes</option>
+  </select>
+</div>
 
-<label>
-  <input type="checkbox" id="like">
-  I like colors.
-</label>
-
+<div> Refresh screen after every:
+  <select id="refresh-after">
+     <option value="2">2</option>
+     <option value="5">5</option>
+     <option value="10">10</option>
+     <option value="20">20</option>
+  </select> export attepmt.</div>
+<div> 
+<div>
+   <b>If there is no new logs, file won't be saved but it is counted for screen refresh.</b>
+   <b>Also make sure that extension refreshes about every 5 minutes to avoid webtask timeouts.</b>
+</div>
 <div id="status"></div>
 <button id="save">Save</button>
 

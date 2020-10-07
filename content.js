@@ -1,13 +1,23 @@
-const DELAY_EXPORT_IN_MSEC = 1000*60*1; // Delay before saving the next logs
-const DELAY_EXPORT_IN_MSEC_QUICK = 100  // In case of an error or app not initialized 
+const TRANSFER_LOOP_QUICK = 100  // Error and start up polling interval in msec
+const CONF_OPTIONS_CHECK = 1000*3 // Polling interval in msec for configuration changes
+
+var delayExportInMSec = 1000*60*1; // Delay before saving the next logs in msec
+var refreshAfter = 5; // Refresh screen when reached to prevent Webtask log extenion to timeout.
 var exportLogs = true; // State of log export
 var doOnce = false; // One time initializations
 var exportButton = null; //Export logs button
-var eventLoopTimer = null; //Event loop timer
+var transferLogTimer = null; //Transfer log timer for polling
+var optionsTimer = null; //Extensions option polling
+var startTransferLog = true; //Flag to initiate log transfell polling
 
-function setEventLoopTimer(value){
-  eventLoopTimer ? clearTimeout(eventLoopTimer) : null;
-  eventLoopTimer = setTimeout(transferLog, value);
+function setOptionsTimer(value){
+  optionsTimer ? clearTimeout(optionsTimer) : null;
+  optionsTimer = setTimeout(transferLog, value);
+}
+
+function setTransferLogTimer(value){
+  transferLogTimer ? clearTimeout(transferLogTimer) : null;
+  transferLogTimer = setTimeout(transferLog, value);
 }
 
 function doOnceFn() {
@@ -33,7 +43,7 @@ function doOnceFn() {
     if (exportLogs) {
       document.getElementById("exportLogButton").innerHTML = "STOP LOG EXPORT";
       // quickly send the available logs
-      setEventLoopTimer(DELAY_EXPORT_IN_MSEC_QUICK); 
+      setTransferLogTimer(TRANSFER_LOOP_QUICK); 
     } else {
       document.getElementById("exportLogButton").innerHTML = "START LOG EXPORT";
     }
@@ -42,7 +52,7 @@ function doOnceFn() {
   doOnce = true;
 }
 
-// Convert HTLM logs to txt logs
+// Convert HTLM logs to text based logs
 function converToTXT(htmlLogs) {
   try {
     var txtLogs = htmlLogs.replace(/<div class="wt-logs-item ">/g,'\r\n\r\n')
@@ -68,7 +78,7 @@ function converToTXT(htmlLogs) {
 function transferLog() {
 
   // Schedule a repeat
-  setEventLoopTimer(DELAY_EXPORT_IN_MSEC);
+  setTransferLogTimer(delayExportInMSec);
 
   // If export logs is disabled skip rest of the actions
   if (!exportLogs) return;
@@ -80,7 +90,7 @@ function transferLog() {
   if(typeof chrome.app.isInstalled === undefined  || 
      document.getElementsByClassName("wt-logs-list-container")[0] === undefined ||
      document.getElementsByClassName("wt-icon-261")[0] ===  undefined ){
-      setEventLoopTimer(DELAY_EXPORT_IN_MSEC_QUICK); 
+      setTransferLogTimer(TRANSFER_LOOP_QUICK); 
       return;
   }
 
@@ -99,9 +109,32 @@ function transferLog() {
 
   // Send the blob to background job
   console.log("Send blob: " + url + " blob_size: " + blob.size);
-  chrome.runtime.sendMessage({"blob": url, "blob_size": blob.size});
+  chrome.runtime.sendMessage({"blob": url, "blob_size": blob.size, "refresh_after": refreshAfter});
 };
 
-// Start the event loop to send the logs to file
-transferLog();
+function readOptions() {
+  chrome.storage.sync.get({
+    exportTime: '60',
+    refreshAfter: '5',
+  }, function(items) {
+    if (delayExportInMSec !==  Number(items.exportTime) * 1000) {
+      delayExportInMSec = Number(items.exportTime) * 1000;
+      setTransferLogTimer(delayExportInMSec);
+    }
+
+    refreshAfter !== Number(items.refreshAfter) ? refreshAfter = Number(items.refreshAfter) : null;
+
+    if (startTransferLog) {
+      transferLog();
+      startTransferLog = false;
+    }
+    setOptionsTimer(CONF_OPTIONS_CHECK);
+
+  });
+}
+
+// Start the loop
+readOptions()
+
+
 

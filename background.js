@@ -1,9 +1,8 @@
-const REFRESH_AFTER = 5;
 var refreshAfter = 0;
 
 // Store the log files with a background job
 chrome.runtime.onMessage.addListener(
-  function(arg, sender, sendResponse) {
+  function(arg) {
     
     console.log("refresh: " + refreshAfter + " blob: " + arg.blob + " blob size: " + arg.blob_size);
     
@@ -25,12 +24,12 @@ chrome.runtime.onMessage.addListener(
     }
 
     // Refresh the screen periodically to prevent the extension to timeout
-    if (refreshAfter >= REFRESH_AFTER )
+    if ( refreshAfter >= Number(arg.refresh_after) )
     {
       chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
         chrome.tabs.update(tabs[0].id, {url: tabs[0].url});
       });
-      refreshAfter = 0;
+      refreshAfter = 1;
     }
     refreshAfter++;
   });
