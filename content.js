@@ -86,12 +86,14 @@ function transferLog() {
 
   // Read the logs from HTML
   var htmlLogs = document.getElementsByClassName("wt-logs-list-container")[0].innerHTML.toString();
-  var txtLogs = converToTXT(htmlLogs);
 
   // Clear the logs by clicking the extension's clear button
   document.getElementsByClassName("wt-icon-261")[0].click();
 
-  // Keep the logs in the Blob
+  // Convert logs to a human readable version
+  var txtLogs = converToTXT(htmlLogs);
+
+  // Store the logs in the Blob
   var blob = new Blob( [txtLogs], {type: "text/plain"});
   var url = URL.createObjectURL(blob);
 
@@ -100,6 +102,6 @@ function transferLog() {
   chrome.runtime.sendMessage({"blob": url, "blob_size": blob.size});
 };
 
-// Start the event loop to send logs to file
+// Start the event loop to send the logs to file
 transferLog();
 

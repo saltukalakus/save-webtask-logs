@@ -1,5 +1,4 @@
 const REFRESH_AFTER = 5;
-const TIMEOUT_REFRESH_IN_MSEC = 1000*60*5 // 5 minutes tops to refresh the screen
 var refreshAfter = 0;
 
 // Store the log files with a background job
