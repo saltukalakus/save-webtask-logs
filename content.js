@@ -43,17 +43,24 @@ function doOnceFn() {
 }
 
 // Convert HTLM logs to txt logs
-function parse(htmlLogs) {
-  var txtLogs = htmlLogs.replace(/<div class="wt-logs-item ">/g,'\r\n\r\n')
-                        .replace(/<div class="wt-logs-item-time">/g,'')
-                        .replace(/<div class="wt-logs-item wt-logs-connected">/g, '')
-                        .replace(/<!-- [/]react-text -->/g, '')
-                        .replace(/<div class="wt-logs-item-description">/g, '')
-                        .replace(/<!-- react-text:(.*?)-->/g, '')
-                        .replace(/<[/]div>/g, '')
-                        .replace(/<span>/g, '')
-                        .replace(/<[/]span>/g, '')
-                        .replace(/&nbsp;/g, '');
+function converToTXT(htmlLogs) {
+  try {
+    var txtLogs = htmlLogs.replace(/<div class="wt-logs-item ">/g,'\r\n\r\n')
+    .replace(/<div class="wt-logs-item-time">/g,'')
+    .replace(/<div class="wt-logs-item wt-logs-connected">/g, '')
+    .replace(/<!-- [/]react-text -->/g, '')
+    .replace(/<div class="wt-logs-item-description">/g, '')
+    .replace(/<!-- react-text:(.*?)-->/g, '')
+    .replace(/<[/]div>/g, '')
+    .replace(/<span>/g, '')
+    .replace(/<[/]span>/g, '')
+    .replace(/&nbsp;/g, '');
+  }
+  catch (problem){
+    console.log(problem);
+    // Incase conversion fails make sure we log the Html version
+    txtLogs = htmlLogs;
+  }
   return txtLogs;
 }
 
@@ -78,14 +85,14 @@ function transferLog() {
   }
 
   // Read the logs from HTML
-  var logs = document.getElementsByClassName("wt-logs-list-container")[0].innerHTML.toString();
-  var parsedLogs = parse(logs);
+  var htmlLogs = document.getElementsByClassName("wt-logs-list-container")[0].innerHTML.toString();
+  var txtLogs = converToTXT(htmlLogs);
 
   // Clear the logs by clicking the extension's clear button
   document.getElementsByClassName("wt-icon-261")[0].click();
 
   // Keep the logs in the Blob
-  var blob = new Blob( [parsedLogs], {type: "text/plain"});
+  var blob = new Blob( [txtLogs], {type: "text/plain"});
   var url = URL.createObjectURL(blob);
 
   // Send the blob to background job

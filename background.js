@@ -11,9 +11,11 @@ chrome.runtime.onMessage.addListener(
     if (arg.blob_size > 0) {
       var file_url=arg.blob;
       try{
-        saveas=file_url.replace(/[^a-zA-Z0-9]/g,'-');
+        saveas=("logs-" + new Date().toISOString()).replace(/[^a-zA-Z0-9]/g,'-');
       }
       catch (problem){
+        console.log(problem);
+        saveas="logs-xyz-abc"; 
       }
 
       chrome.downloads.download({
