@@ -1,10 +1,8 @@
 // Saves options to chrome.storage
 function save_options() {
-    var exportTime = document.getElementById('export-time').value;
-    var refreshAfter = document.getElementById('refresh-after').value;
+    var saveInSec = document.getElementById('save-time').value;
     chrome.storage.sync.set({
-      exportTime: exportTime,
-      refreshAfter: refreshAfter,
+        saveInSec: saveInSec,
     }, function() {
       // Update status to let user know options were saved.
       var status = document.getElementById('status');
@@ -19,11 +17,9 @@ function save_options() {
   // stored in chrome.storage.
   function restore_options() {
     chrome.storage.sync.get({
-      exportTime: '60',
-      refreshAfter: '5',
+        saveInSec: '60',
     }, function(items) {
-      document.getElementById('export-time').value = items.exportTime;
-      document.getElementById('refresh-after').value = items.refreshAfter;
+      document.getElementById('save-time').value = items.saveInSec;
     });
   }
   document.addEventListener('DOMContentLoaded', restore_options);

@@ -1,23 +1,24 @@
-const TRANSFER_LOOP_QUICK = 100  // Error and start up polling interval in msec
-const CONF_OPTIONS_CHECK = 1000*3 // Polling interval in msec for configuration changes
+const SAVE_LOG_LOOP_QUICK = 100;  // Error and start up polling interval in msec
+const CONF_OPTIONS_CHECK = 1000 * 3; // Polling interval in msec for configuration changes
+const REFRESH_SCREEN_IN_MSEC = 1000 * 60 * 6;
 
-var delayExportInMSec = 1000*60*1; // Delay before saving the next logs in msec
+var saveInMSec = 1000 * 60 * 1;
 var refreshAfter = 5; // Refresh screen when reached to prevent Webtask log extenion to timeout.
-var exportLogs = true; // State of log export
+var saveLogs = true; // Current state of log saving
 var doOnce = false; // One time initializations
-var exportButton = null; //Export logs button
-var transferLogTimer = null; //Transfer log timer for polling
+var saveButton = null;
+var saveLogTimer = null;
 var optionsTimer = null; //Extensions option polling
-var startTransferLog = true; //Flag to initiate log transfell polling
+var startSavingLogs = true; //Flag to initiate log saving
 
 function setOptionsTimer(value){
   optionsTimer ? clearTimeout(optionsTimer) : null;
-  optionsTimer = setTimeout(transferLog, value);
+  optionsTimer = setTimeout(optionsTimer, value);
 }
 
-function setTransferLogTimer(value){
-  transferLogTimer ? clearTimeout(transferLogTimer) : null;
-  transferLogTimer = setTimeout(transferLog, value);
+function setSaveLogTimer(value){
+  saveLogTimer ? clearTimeout(saveLogTimer) : null;
+  saveLogTimer = setTimeout(saveLog, value);
 }
 
 function doOnceFn() {
@@ -30,22 +31,22 @@ function doOnceFn() {
 
   // DOM magic to add the "Export log button"
   var contentHeader = document.getElementsByClassName("content-header")[1];
-  exportButton = document.createElement("button");
-  exportButton.className = "btn btn-default pull-right";
-  exportButton.id = "exportLogButton";
+  saveButton = document.createElement("button");
+  saveButton.className = "btn btn-default pull-right";
+  saveButton.id = "saveLogButton";
   var text = document.createTextNode("STOP LOG EXPORT");
-  exportButton.appendChild(text);
-  contentHeader.appendChild(exportButton);
+  saveButton.appendChild(text);
+  contentHeader.appendChild(saveButton);
 
   // Button logic to start/stop saving logs
-  exportButton.onclick = function (e) {
-    exportLogs = !exportLogs;
-    if (exportLogs) {
-      document.getElementById("exportLogButton").innerHTML = "STOP LOG EXPORT";
+  saveButton.onclick = function (e) {
+    saveLogs = !saveLogs;
+    if (saveLogs) {
+      document.getElementById("saveLogButton").innerHTML = "STOP SAVING LOGS";
       // quickly send the available logs
-      setTransferLogTimer(TRANSFER_LOOP_QUICK); 
+      setSaveLogTimer(SAVE_LOG_LOOP_QUICK); 
     } else {
-      document.getElementById("exportLogButton").innerHTML = "START LOG EXPORT";
+      document.getElementById("saveLogButton").innerHTML = "START SAVING LOGS";
     }
   }
 
@@ -75,13 +76,13 @@ function converToTXT(htmlLogs) {
 }
 
 // Grab the logs from screen and send to background job
-function transferLog() {
+function saveLog() {
 
   // Schedule a repeat
-  setTransferLogTimer(delayExportInMSec);
+  setSaveLogTimer(saveInMSec);
 
-  // If export logs is disabled skip rest of the actions
-  if (!exportLogs) return;
+  // If saving logs is disabled skip rest of the actions
+  if (!saveLogs) return;
 
   // Initialization of GUI and other stuff which needs to run once
   doOnceFn();
@@ -90,7 +91,7 @@ function transferLog() {
   if(typeof chrome.app.isInstalled === undefined  || 
      document.getElementsByClassName("wt-logs-list-container")[0] === undefined ||
      document.getElementsByClassName("wt-icon-261")[0] ===  undefined ){
-      setTransferLogTimer(TRANSFER_LOOP_QUICK); 
+      setSaveLogTimer(SAVE_LOG_LOOP_QUICK); 
       return;
   }
 
@@ -114,19 +115,20 @@ function transferLog() {
 
 function readOptions() {
   chrome.storage.sync.get({
-    exportTime: '60',
-    refreshAfter: '5',
+    saveInSec: '60',
   }, function(items) {
-    if (delayExportInMSec !==  Number(items.exportTime) * 1000) {
-      delayExportInMSec = Number(items.exportTime) * 1000;
-      setTransferLogTimer(delayExportInMSec);
+    if (saveInMSec !==  Number(items.saveInSec) * 1000) {
+      saveInMSec = Number(items.saveInSec) * 1000;
+      setSaveLogTimer(saveInMSec);
     }
 
-    refreshAfter !== Number(items.refreshAfter) ? refreshAfter = Number(items.refreshAfter) : null;
+    // Tab refresh doesn't have a separate timer but uses file save events
+    // With this line, we ensure that screen refresh every REFRESH_SCREEN_IN_MSEC
+    refreshAfter = Math.ceil(REFRESH_SCREEN_IN_MSEC / saveInMSec);
 
-    if (startTransferLog) {
-      transferLog();
-      startTransferLog = false;
+    if (startSavingLogs) {
+      saveLog();
+      startSavingLogs = false;
     }
     setOptionsTimer(CONF_OPTIONS_CHECK);
 
@@ -134,6 +136,7 @@ function readOptions() {
 }
 
 // Start the loop
+console.log("SAVE WEBTASK LOGS START..");
 readOptions()
 
 
