@@ -1,0 +1,48 @@
+{
+  "manifest_version": 2,
+
+  "name": "export-webtask-logs",
+  "description": "Export Auth0 Webtask Logs To Local Disk",
+  "version": "1.0.0",
+
+  "icons": {                   
+    "16": "images/webtask16.png",
+    "32": "images/webtask32.png",
+    "48": "images/webtask48.png",
+    "128": "images/webtask128.png"
+  }, 
+  "page_action": {
+    "permissions": [
+      "https://*.webtask.io/*"
+    ],
+    "default_icon": {
+        "16": "images/webtask16.png",
+        "32": "images/webtask32.png",
+        "48": "images/webtask48.png",
+        "128": "images/webtask128.png"
+    }
+  },
+  "background": {
+    "scripts": [ "background.js" ],
+    "persistent": false 
+  },
+  "content_scripts": [
+    {
+    "matches": ["https://*.webtask.io/*"],
+    "js": ["content.js"],
+    "run_at": "document_idle"
+    }
+  ],
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": false
+  },
+  "permissions": [
+    "storage",
+    "tabs",
+    "activeTab",
+    "background",
+    "downloads",
+    "https://*.webtask.io/*"
+  ]
+}
