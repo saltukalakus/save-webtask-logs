@@ -84,6 +84,10 @@ function saveLog() {
   // If saving logs is disabled skip rest of the actions
   if (!saveLogs) return;
 
+  if(typeof chrome.app.isInstalled==='undefined'){
+    console.log("Chrome app isn't installed yet. Skip save..");
+  }
+
   // Initialization of GUI and other stuff which needs to run once
   doOnceFn();
 

@@ -17,7 +17,7 @@ function save_options() {
   // stored in chrome.storage.
   function restore_options() {
     chrome.storage.sync.get({
-        saveInSec: '60',
+        saveInSec: '15',
     }, function(items) {
       document.getElementById('save-time').value = items.saveInSec;
     });
