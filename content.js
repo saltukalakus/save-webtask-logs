@@ -1,12 +1,6 @@
-const SAVE_LOG_LOOP_QUICK = 100;  // Error and start up polling interval in msec
-const CONF_OPTIONS_CHECK = 1000 * 3; // Polling interval in msec for configuration changes
-const REFRESH_SCREEN_IN_MSEC = 1000 * 60 * 6;
-
-var saveInMSec = 1000 * 60 * 1;
-var refreshAfter = 5; // Refresh screen when reached to prevent Webtask log extenion to timeout.
+var saveInMSec = 1000 * 15;
 var saveLogs = true; // Current state of log saving
 var doOnce = false; // One time initializations
-var saveButton = null;
 var saveLogTimer = null;
 var optionsTimer = null; //Extensions option polling
 var startSavingLogs = true; //Flag to initiate log saving
@@ -31,7 +25,7 @@ function doOnceFn() {
 
   // DOM magic to add the "Export log button"
   var contentHeader = document.getElementsByClassName("content-header")[1];
-  saveButton = document.createElement("button");
+  var saveButton = document.createElement("button");
   saveButton.className = "btn btn-default pull-right";
   saveButton.id = "saveLogButton";
   var text = document.createTextNode("STOP LOG EXPORT");
@@ -44,7 +38,7 @@ function doOnceFn() {
     if (saveLogs) {
       document.getElementById("saveLogButton").innerHTML = "STOP SAVING LOGS";
       // quickly send the available logs
-      setSaveLogTimer(SAVE_LOG_LOOP_QUICK); 
+      setSaveLogTimer(100); 
     } else {
       document.getElementById("saveLogButton").innerHTML = "START SAVING LOGS";
     }
@@ -95,7 +89,7 @@ function saveLog() {
   if(typeof chrome.app.isInstalled === undefined  || 
      document.getElementsByClassName("wt-logs-list-container")[0] === undefined ||
      document.getElementsByClassName("wt-icon-261")[0] ===  undefined ){
-      setSaveLogTimer(SAVE_LOG_LOOP_QUICK); 
+      setSaveLogTimer(100); 
       return;
   }
 
@@ -114,28 +108,23 @@ function saveLog() {
 
   // Send the blob to background job
   console.log("Send blob: " + url + " blob_size: " + blob.size);
-  chrome.runtime.sendMessage({"blob": url, "blob_size": blob.size, "refresh_after": refreshAfter});
+  chrome.runtime.sendMessage({"blob": url, "blob_size": blob.size});
 };
 
 function readOptions() {
   chrome.storage.sync.get({
-    saveInSec: '60',
+    saveInSec: '15',
   }, function(items) {
     if (saveInMSec !==  Number(items.saveInSec) * 1000) {
       saveInMSec = Number(items.saveInSec) * 1000;
       setSaveLogTimer(saveInMSec);
     }
 
-    // Tab refresh doesn't have a separate timer but uses file save events
-    // With this line, we ensure that screen refresh every REFRESH_SCREEN_IN_MSEC
-    refreshAfter = Math.ceil(REFRESH_SCREEN_IN_MSEC / saveInMSec);
-
     if (startSavingLogs) {
       saveLog();
       startSavingLogs = false;
     }
-    setOptionsTimer(CONF_OPTIONS_CHECK);
-
+    setOptionsTimer(3000);
   });
 }
 
