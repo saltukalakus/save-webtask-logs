@@ -13,8 +13,7 @@
   }, 
   "page_action": {
     "permissions": [
-      "https://*.auth0.com/a9446dcf57413cd0ec81c8a5456518f9",
-      "https://*.webtask.io/a9446dcf57413cd0ec81c8a5456518f9"
+      "https://*/a9446dcf57413cd0ec81c8a5456518f9"
     ],
     "default_icon": {
         "16": "images/webtask16.png",
@@ -29,8 +28,7 @@
   },
   "content_scripts": [
     {
-    "matches": ["https://*.auth0.com/a9446dcf57413cd0ec81c8a5456518f9",
-                "https://*.webtask.io/a9446dcf57413cd0ec81c8a5456518f9"],
+    "matches": ["https://*/a9446dcf57413cd0ec81c8a5456518f9"],
     "js": ["content.js"],
     "run_at": "document_idle"
     }
@@ -45,7 +43,6 @@
     "activeTab",
     "background",
     "downloads",
-    "https://*.auth0.com/a9446dcf57413cd0ec81c8a5456518f9",
-    "https://*.webtask.io/a9446dcf57413cd0ec81c8a5456518f9"
+    "https://*/a9446dcf57413cd0ec81c8a5456518f9"
   ]
 }
